@@ -53,7 +53,7 @@ def houghLine(image):
 	frame = cv2.resize(frame, dsize=(224, 224), interpolation=cv2.INTER_AREA)
 
 	dst = frame.copy()
-	dst = frame[92:224, 60:160]
+	dst = dst[92:224, 60:160]
 	dst = cv2.resize(dst, dsize=(224, 224), interpolation=cv2.INTER_AREA)
 
 	height, width = frame.shape[:2]  # 이미지 높이, 너비
@@ -207,128 +207,79 @@ def houghLine(image):
 		elif judge == 'human':
 			print('human!')
 	# setdrive(S, 1)
+
 	# show the frame and update thqe FPS counter
 	cv2.imshow("Frame", result)
 
-class Control(object):
-	def __init__(self):
-		self.soc = socket.socket()
-		self.soc.bind(('192.168.0.102', 9000))
-		self.soc.listen(3)
-		self.soc.setblocking(1)
-		self.conn, self.addr = self.soc.accept()
-		print('predict connected')
-
-	def steer(self):
-		self.conn.send(b'sibal')
-
-	def stop(self):
-		self.conn.send(b'Stop')
-
-class VideoStreamHandler(socketserver.StreamRequestHandler):
-	print("hello")
-
-	control = Control()
-	stream_bytes = b' '
-	sock_file = control.conn.makefile('rb')
-	print('stream...')
-
-	#def handle(self):
-	try:
-		print("Press 'q' to exit")
-		while True:
-			stream_bytes += sock_file.read(1024)
-			first = stream_bytes.find(b'\xff\xd8')  # jpeg start
-			last = stream_bytes.find(b'\xff\xd9')  # jpeg end
-			if first != -1 and last != -1:
-				jpg = stream_bytes[first:last + 2]
-				stream_bytes = stream_bytes[last + 2:]
-				image = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
-				houghLine(image)
-
-				control.steer()
-	# self.connection.send(judge.encode())
-	# if cv2.waitKey(1) & 0xFF == ord('q'):
-	#	break
-	finally:
-		control.conn.close()
+	return judge
 
 
-def server_thread(host, port):
-	server = socketserver.TCPServer((host, port), VideoStreamHandler)
-	server.serve_forever()
 
-if __name__ == '__main__':
-	video_thread = threading.Thread(target=server_thread('192.168.0.102', 8000))
-	video_thread.start()
+class MyTCPHandler(socketserver.BaseRequestHandler):
 
-'''
-def connect1():
-	global stop_c, slow_c, left_c, human_c, prev, judge
+	def handle(self):
+		global judge
+		sock = self.request
+		sock.send(judge)
 
-	while True:
-		print("connect1 start")
-		server_socket = socket.socket()
-		server_socket.bind(("192.168.0.102", 8000))
-		server_socket.listen(2)
-		connection, client_address = server_socket.accept()
-		print("connect1 accepted")
-		sock_file = connection.makefile('rb')
-		host_name = socket.gethostname()
-		host_ip = socket.gethostbyname(host_name)
+class VideoStreamingTest(object):
+	def __init__(self, host, port1, port2):
 
+		self.host = host
+		self.port1 = port1
+		self.port2 = port2
+
+		print("start")
+		self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.server_socket.bind((self.host, self.port1))
+		self.server_socket.listen(0)
+		self.connection, self.client_address = self.server_socket.accept()
+		print("accepted")
+
+		self.data = self.connection.makefile('rwb')
+		self.host_name = socket.gethostname()
+		self.host_ip = socket.gethostbyname(self.host_name)
+
+		self.streaming()
+
+	def streaming(self):
+		global judge
 		try:
-			print("Host: ", host_name + ' ' + host_ip)
-			print("Connection from: ", client_address)
+			print("Host: ", self.host_name + ' ' + self.host_ip)
+			print("Connection from: ", self.client_address)
 			print("Streaming...")
 			print("Press 'q' to exit")
 
 			# need bytes here
 			stream_bytes = b' '
+			judge = ''
+			while True:
+				stream_bytes += self.data.read(1024)
+				first = stream_bytes.find(b'\xff\xd8') #jpeg start
+				last = stream_bytes.find(b'\xff\xd9')  #jpeg end
+				if first != -1 and last != -1:
+					jpg = stream_bytes[first:last + 2]
+					stream_bytes = stream_bytes[last + 2:]
+					image = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
+					judge = houghLine(image)
 
-			#while True:
-			stream_bytes += sock_file.read(1024)
-			first = stream_bytes.find(b'\xff\xd8')  # jpeg start
-			last = stream_bytes.find(b'\xff\xd9')  # jpeg end
-			if first != -1 and last != -1:
-				jpg = stream_bytes[first:last + 2]
-				stream_bytes = stream_bytes[last + 2:]
-				image = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
-				houghLine(image)
-				print(judge)
+					print('j =', judge)
 
-			connection.send(judge.encode())
-				# self.connection.send(judge.encode())
-				#if cv2.waitKey(1) & 0xFF == ord('q'):
-				#	break
+					# judge
+					server = socketserver.TCPServer((self.host, self.port2), MyTCPHandler)
+					print('judge 서버 시작...')
+					server.serve_forever()  # 클라이언트로부터 접속 요청을 받아들일 준비
+
+				if cv2.waitKey(1) & 0xFF == ord('q'):
+					break
 
 		finally:
-			connection.close()
-			server_socket.close()
-'''
-def connect2():
-	'''
-	global stop_c, slow_c, left_c, human_c, prev, judge
-	print("connect2 start")
-	server_socket = socket.socket()
-	server_socket.bind(("192.168.0.102", 8000))
-	server_socket.listen(0)
-	connection, client_address = server_socket.accept()
-	print("connect2 accepted")
-	'''
-	#global judge
-	#while True:
-	#	connection.send(judge.encode())
+			self.connection.close()
+			self.server_socket.close()
 
+if __name__ == '__main__':
+	h, p1, p2 = "192.168.0.102", 8000, 8002
 
-#hough_thread = threading.Thread(name='t1', target = connect1)
-#predict_thread = threading.Thread(name='t2', target = connect2)
+	# 영상 스트리밍
+	VideoStreamingTest(h, p1, p2)
 
-#hough_thread.daemon = True
-#predict_thread.daemon = True
-
-#hough_thread.start()
-#predict_thread.start()
-
-#hough_thread.join()
-#predict_thread.join()
