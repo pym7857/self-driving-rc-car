@@ -12,3 +12,11 @@
 
 - ***You can see team member and github profile***
 - ***You should probably find team member's lastest project***
+
+## ***1. Development Environment***
+* ***OS : Windows 10***
+* ***IDE : Pycharm***
+* ***Language : Python 3.6***
+
+## ***2. Structure drawing***
+![bluePrint](./SampleImages/bluePrint.png) 
