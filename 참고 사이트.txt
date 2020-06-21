@@ -1,6 +1,0 @@
-https://carstart.tistory.com/188 //canny 약한edge
-https://m.blog.naver.com/PostView.nhn?blogId=windowsub0406&logNo=220894462409&proxyReferer=https%3A%2F%2Fwww.google.com%2F //허프라인 변환 내용 정리
-https://en.wikipedia.org/wiki/Gaussian_blur //가우시안 필터 위키
-https://pinkwink.kr/1264 //라인따기 전체적인 과정
-https://github.com/HyOsori/Osori-SelfDrivingWithGTA5/wiki/%EA%B0%95%EC%A2%8C-4---%EC%B0%A8%EC%84%A0-%EA%B2%80%EC%B6%9C%EC%9D%84-%EC%9C%84%ED%95%9C-ROI(%EA%B4%80%EC%8B%AC%EC%98%81%EC%97%AD)
-//ROI 관심영역 설정
