@@ -21,9 +21,9 @@
 ## ***2. Structure drawing***
 ![bluePrint](./SampleImages/bluePrint.png) 
 
-## ***1. Hough Line Transform***
-## ***2. Object Detection***
-## ***3. Multi Thread Frame Buffer***
-## ***4. Socket Programming***
-## ***5. 차량 제어***
-## ***6. 차량 조립***
+## ***3. Hough Line Transform***
+## ***4. Object Detection***
+## ***5. Multi Thread Frame Buffer***
+## ***6. Socket Programming***
+## ***7. 차량 제어***
+## ***8. 차량 조립***
