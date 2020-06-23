@@ -25,7 +25,7 @@
 허프 변환이란, 이미지 속에서 주요 특징 요소(직선, 원, 타원)들을 찾는 방법입니다. 
 다시말해, 이미지 상의 특정한 점들간의 연관성을 찾아 특징을 추출하는 방법입니다.
 
-![image](https://user-images.githubusercontent.com/49298852/85352442-f1f32680-b540-11ea-8fa2-2472f3ed1407.png)
+![image](https://user-images.githubusercontent.com/49298852/85352442-f1f32680-b540-11ea-8fa2-2472f3ed1407.png){: .center}
 
  위 그림을 보면, 왼쪽의 xy평면 상에 기울기 a1과 y절편으로 b1을 갖는 직선 y = a1x + b1이 있고,
 이 직선 상의 점 중 임의의 점 (y1, x1), (y2, x2), (y3, x3)가 있습니다.
