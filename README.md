@@ -19,7 +19,7 @@
 * ***Language : Python 3.6***
 
 ## ***2. Structure drawing***
-![bluePrint](./SampleImages/bluePrint.png) 
+![bluePrint](./imgs/final.PNG) 
 
 ## ***3. Hough Line Transform***
 허프 변환이란, 이미지 속에서 주요 특징 요소(직선, 원, 타원)들을 찾는 방법입니다. 
