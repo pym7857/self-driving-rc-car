@@ -74,24 +74,140 @@ CNN의 전체적인 구조는 아래와 같습니다. 특징 추출 단계인 fe
  ![image](https://user-images.githubusercontent.com/49298852/85352861-e2c0a880-b541-11ea-95af-e789c4173c9d.png)
 
 ## ***7. 차량 제어***
+<h3>■ 차량 제어 코드</h3>
+<pre><code>import RPi.GPIO as GPIO
+from time import sleep
+# Motor state
+STOP =0
+FORWARD =1
+# Motor channel
+CHLU =0
+CHLD =1
+CHRU =2
+CHRD =3
+# Drive state
+S =0
+F =1
+B =2
+FR =3
+FL =4
+FS =5
+# PIN input output setting
+OUTPUT =1
+INPUT =0
+# PIN setting
+HIGH =1
+LOW =0
+# Real PIN define
+# PWM PIN(BCM PIN)
+ENLD =5
+ENRU =24
+ENRD =25
+ENLU =6
+# GPIO PIN
+IN1 =16
+IN2 = 12 # Left Down
+IN3 =4
+IN4 =17 # Right Up
+IN5 =21
+IN6 =20  # Right Down
+IN7 =27
+IN8 =22 # Left Up
+# GPIO Library Setting
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+# PIN setting algorithm
+
+def setPinConfig(EN, INF, INO): # EN, OFF, ON
+    GPIO.setup(EN, GPIO.OUT)
+    GPIO.setup(INF, GPIO.OUT)
+    GPIO.setup(INO, GPIO.OUT)
+    # Activate PWM in 100khz
+    pwm = GPIO.PWM(EN, 100)
+    # First, PWM is stop
+    pwm.start(0)
+    return pwm
+
+#Motor control algorithm
+def setMotorControl(pwm, INO, INF, speed, stat):
+    # Motor speed control to PWM
+    pwm.ChangeDutyCycle(speed)
+    
+    # Forward
+    if stat == FORWARD:
+        GPIO.output(INO, HIGH)
+        GPIO.output(INF, LOW)
+    # STOP
+    elif stat == STOP:
+        GPIO.output(INO, LOW)
+        GPIO.output(INF, LOW)
+#Motor control easily
+def setMotor(ch, speed, stat):
+    if ch == CHLD:
+        setMotorControl(pwmLD, IN1, IN2, speed, stat)
+    elif ch == CHRU:
+        setMotorControl(pwmRU, IN3, IN4, speed, stat)
+    elif ch == CHRD:
+        setMotorControl(pwmRD, IN5, IN6, speed, stat)
+    elif ch == CHLU:
+        setMotorControl(pwmLU, IN7, IN8, speed, stat)
+#Motor Pin Setting(global var)
+pwmLD = setPinConfig(ENLD, IN1, IN2) #in 100Hz
+pwmRU = setPinConfig(ENRU, IN3, IN4) #in 100Hz
+pwmRD = setPinConfig(ENRD, IN5, IN6) #in 100Hz
+pwmLU = setPinConfig(ENLU, IN7, IN8) #in 100Hz
+
+#Drive algorithm
+def setdrive(drv,T):
+    if drv == S:
+        setMotor(CHLU, 80, STOP) #setSpeed=80
+        setMotor(CHLD, 80, STOP)
+        setMotor(CHRU, 80, STOP)
+        setMotor(CHRD, 80, STOP)
+        sleep(T)
+    elif drv == F:
+        setMotor(CHLU, 60, FORWARD)
+        setMotor(CHLD, 60, FORWARD)
+        setMotor(CHRU, 60, FORWARD)
+        setMotor(CHRD, 60, FORWARD)
+        sleep(T)
+    elif drv == FL:
+        setMotor(CHLU, 50, STOP)
+        setMotor(CHLD, 30, FORWARD)
+        setMotor(CHRU, 65, FORWARD)
+        setMotor(CHRD, 65, FORWARD)
+        sleep(T)
+    elif drv == FR:
+        setMotor(CHLU, 65, FORWARD)
+        setMotor(CHLD, 65, FORWARD)
+        setMotor(CHRU, 50, STOP)
+        setMotor(CHRD, 30, FORWARD)
+        sleep(T)
+    elif drv == FS:
+        setMotor(CHLU, 45, FORWARD)
+        setMotor(CHLD, 45, FORWARD)
+        setMotor(CHRU, 45, FORWARD)
+        setMotor(CHRD, 45, FORWARD)
+        sleep(T)
+</code></pre>
 ## ***8. 차량 조립***
-■하드웨어 기능
-- 자동차 구동
+<h3>■ 하드웨어 기능</h3>
+<h4>- 자동차 구동</h4>
  4개의 DC모터로 자동차가 움직이며 바퀴 이동속도의 변화를 통해 전진, 좌회전, 우회전을 구현합니다. DC모터는 모터드라이버와 라즈베리파이의 GPIO를 통해 조정합니다.
 
-- 실시간 영상 확인
+<h4>- 실시간 영상 확인</h4>
  라즈베리파이와 연결된 pi camera를 통해 자동차 전면 영상을 확인합니다. 이 실시간 영상은 라즈베리파이에서 데이터로 가공된 후에 소켓을 통해 전송되어 houghLine Transform 과 object Detection이 처리 됩니다.
 
-- 거리 센서를 통해 물체 인식
+<h4>- 거리 센서를 통해 물체 인식</h4>
  Object detection을 사용해서 물체를 인식해서 물체에 따른 정해진 행동을 하려 했으나 소켓으로 영상을 전송할 때 약간의 지연이 존재해서 판단이 느려지는 문제 발생했습니다. 이 문제를 해결하기 위해서 우선 거리센서를 통해 전방 일정 거리 안에 물체가 인지하고 차량을 정지합니다. 그리고 객체를 object detection으로 판단한 뒤에 주행하도록 했습니다.
 
-■하드웨어 구성
-- 라떼 판다
+<h3>■ 하드웨어 구성</h3>
+<h4>- 라떼 판다</h4>
  카메라로 받아들인 프레임을 소켓으로 데스크톱에 전송하고 초음파 거리 센서를 통해 받아들인 값을 통해 차량을 제어 해주는 소형cpu입니다. 라떼 판다의 사양은 아래와 같습니다.
 
 ![image](https://user-images.githubusercontent.com/49298852/85352903-fff57700-b541-11ea-8fbc-d48ec1ff37a2.png)
 
-- DC모터
+<h4>- DC모터</h4>
  DC모터는 차량의 바퀴를 움직이게 하는 장치입니다. 모터드라이버는 모터를 제어할수 있게 해주는 장치입니다. DC모터는 NP01S-220 4개, 모터드라이버는 L298N 2개를 활용 하였습니다. 모터드라이버 1개당 2륜을 제어하며 두 제품 사양은 다음과 같습니다.
 
 ![image](https://user-images.githubusercontent.com/49298852/85352928-14d20a80-b542-11ea-952e-eab741d176ae.png)
@@ -99,12 +215,12 @@ CNN의 전체적인 구조는 아래와 같습니다. 특징 추출 단계인 fe
  
 모터드라이버의 Enable 값은 모터를 어느 정도의 속도로 움직이게 하는지에 대한 동기값 입니다. 이 Enable 값을 라즈베리파이 GPIO를 통해 조정하고 이를 통해 나온 Output 값을 DC모터에 연결하여 DC모터를 구동합니다.
 
-- 파이카메라
+<h4>- 파이카메라</h4>
  Pi camera는 라즈베리파이에 연결 가능하며 라즈베리파이 내부에서 조정 가능합니다. 또한 사진 촬영, 동영상 촬영, 실시간 영상 촬영도 가능합니다. 아래는 파이카메라의 사양입니다. 파이카메라를 차량 상단 중앙 부분에 고정하여 차량 전반부 영상을 촬영 가능하도록 하였습니다. 이 영상으로 도로와 장애물, 표지판을 확인하며 이에 따른 행동 교정을 하도록 합니다.
 
 ![image](https://user-images.githubusercontent.com/49298852/85352979-3206d900-b542-11ea-98f8-9053c27f5dfd.png)
 
-- 초음파 거리 센서
+<h4>- 초음파 거리 센서</h4>
  초음파 거리센서는 송신부와 수신부로 나뉘어져 있으며, 송신부에서 일정한 시간의 간격을 둔 짧은 초음파 펄스를 방사하고, 대상물에 부딪혀 돌아온 에코신호를 수신부에서 받아 이에 대한 시간차를 기반으로 거리를 산출합니다. 이를 통해 장애물의 유무, 물체의 거리 또는 속도 등을 측정할 수 있습니다.
 
 ![image](https://user-images.githubusercontent.com/49298852/85353002-3cc16e00-b542-11ea-8517-b2537373b987.png)
